@@ -1,12 +1,11 @@
 import sys
 import os
 
-# Projenin ana dizinini Python path'ine ekle
 current_dir = os.path.dirname(os.path.abspath(__file__))
 parent_dir = os.path.dirname(current_dir)
 sys.path.append(parent_dir)
 
-from dataAccess.dataAccess import UserRepository
+from dataAccess.dataAccess import UserRepository,LectureRepository
 
 class AuthenticationService:
 
@@ -61,3 +60,14 @@ class AuthenticationService:
                 "name": user["name"]
             }
         return None
+
+class CourseService:
+    def __init__(self):
+        self.repo = LectureRepository()
+
+    def get_description(self, term: str):
+        term = (term or "").strip()
+        if not term:
+            return None
+        row = self.repo.find_course(term)
+        return row.description if row else None

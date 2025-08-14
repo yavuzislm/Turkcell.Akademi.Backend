@@ -1,15 +1,15 @@
 from flask import Flask, request, jsonify
 from flask_cors import CORS
 
-from businessLogic.businessLogic import AuthenticationService
+from businessLogic.businessLogic import AuthenticationService,CourseService
 
 "Presentation Layer -> Business Layer -> Data Access Layer"
 
 app = Flask(__name__)
 CORS(app)
 
-# İş mantığı servisini başlat...
 auth_service = AuthenticationService()
+course_service = CourseService()
 
 
 @app.route('/login', methods=['POST'])
@@ -74,6 +74,20 @@ def get_user(email):
             'status': 'error',
             'message': 'Sunucu hatası'
         }), 500
+
+@app.post('/api/logs/search')
+def log_search():
+    data = request.get_json() or {}
+    term = (data.get('q') or '').strip()
+    print('SEARCH TERM =', term)
+
+    description = course_service.get_description(term)
+    if description is None:
+        print("Not found")
+        return jsonify({"error": "Ders bulunamadı"}), 404
+
+    print(description)
+    return jsonify({"description": description}), 200
 
 if __name__ == '__main__':
     app.run(debug=True)
