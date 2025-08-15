@@ -5,7 +5,7 @@ Base = declarative_base()
 # ORM (Object-Relational Mapping) başlatıyorum.
 
 class UserInfo(Base):
-    __tablename__ = 'users_info'  # mySQL içerisindeki table ismim
+    __tablename__ = 'users_info'  # mySQL içerisindeki table ismimi giriyorum.
     id = Column(Integer, primary_key=True)
     email = Column(String(255), nullable=False, unique=True)
     sifre = Column(String(255), nullable=False)
@@ -66,6 +66,25 @@ class LectureRepository:
         OR nameOfCourse LIKE CONCAT('%', :term, '%')
         LIMIT 1; Aslında yazdığım kod ile buradaki gibi sql'de oluşacak bir if koşulu oluşturuyomuşum.
         Bu sayede dönüş olarak MySQL'den dönen ilk değer dönüyor.
+        ilike komutu ile büyük küçük harf önemsiz oluyor.
+        % -> işareti ise sql tablosunda herhangi bir yerde olabilir demek.
+        """""
+        return q.first()
 
+    def find_nameOfCourse(self, term: str):
+        q = self.session.query(lectureDetails).filter(
+            or_(
+                lectureDetails.idOfCourses == term,
+                lectureDetails.nameOfCourse.ilike(f"%{term}%")
+            ))
+        """""
+        SELECT *
+        FROM courses
+        WHERE idOfCourses = :term
+        OR nameOfCourse LIKE CONCAT('%', :term, '%')
+        LIMIT 1; Aslında yazdığım kod ile buradaki gibi sql'de oluşacak bir if koşulu oluşturuyomuşum.
+        Bu sayede dönüş olarak MySQL'den dönen ilk değer dönüyor.
+        ilike komutu ile büyük küçük harf önemsiz oluyor.
+        % -> işareti ise sql tablosunda herhangi bir yerde olabilir demek.
         """""
         return q.first()

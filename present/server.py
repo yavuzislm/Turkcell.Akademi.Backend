@@ -81,13 +81,12 @@ def log_search():
     term = (data.get('q') or '').strip()
     print('SEARCH TERM =', term)
 
-    description = course_service.get_description(term)
-    if description is None:
+    course = course_service.get_course(term)
+    if course is None:
         print("Not found")
         return jsonify({"error": "Ders bulunamadı"}), 404
 
-    print(description)
-    return jsonify({"description": description}), 200
-
+    print(course)
+    return jsonify(course), 200
 if __name__ == '__main__':
     app.run(debug=True)

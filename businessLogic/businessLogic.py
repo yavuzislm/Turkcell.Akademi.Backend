@@ -65,9 +65,14 @@ class CourseService:
     def __init__(self):
         self.repo = LectureRepository()
 
-    def get_description(self, term: str):
+    def get_course(self, term: str):
         term = (term or "").strip()
         if not term:
             return None
         row = self.repo.find_course(term)
-        return row.description if row else None
+        if row:
+            return {
+                "name": row.nameOfCourse,
+                "description": row.description
+            }
+        return None
