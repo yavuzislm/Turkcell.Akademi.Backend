@@ -1,9 +1,9 @@
 from flask import Flask, request, jsonify
 from flask_cors import CORS
 
-from businessLogic.businessLogic import AuthenticationService,CourseService
+from businessLogic.businessLogic import AuthenticationService, CourseService
 
-"Presentation Layer -> Business Layer -> Data Access Layer"
+"Presentation Layer -> Business Layer -> cd "
 
 app = Flask(__name__)
 CORS(app)
@@ -11,21 +11,16 @@ CORS(app)
 auth_service = AuthenticationService()
 course_service = CourseService()
 
-
 @app.route('/login', methods=['POST'])
 def login():
     try:
         data = request.get_json()
 
         if not data:
-            return jsonify({
-                'status': 'fail',
-                'message': 'JSON verisi gerekli'
-            }), 400
+            return jsonify({'status': 'fail', 'message': 'JSON verisi gerekli'}), 400
 
         email = data.get('email')
         password = data.get('password')
-
         print(f"Login attempt for email: {email}")
 
         result = auth_service.authenticate_user(email, password)
@@ -34,46 +29,30 @@ def login():
             return jsonify({
                 'status': 'success',
                 'message': result["message"],
+                'role': result["user"]["role"],  # Role bilgisini ayrı olarak gönder
                 'user': result["user"]["role"],
                 'userInfo': result["user"]
             }), 200
         else:
-            return jsonify({
-                'status': 'fail',
-                'message': result["message"]
-            }), 401
+            return jsonify({'status': 'fail', 'message': result["message"]}), 401
 
     except Exception as e:
         print(f"Login error: {str(e)}")
-        return jsonify({
-            'status': 'error',
-            'message': 'Sunucu hatası'
-        }), 500
+        return jsonify({'status': 'error', 'message': 'Sunucu hatası'}), 500
 
 
 @app.route('/user/<email>', methods=['GET'])
 def get_user(email):
     try:
         user_info = auth_service.get_user_info(email)
-
         if user_info:
-            return jsonify({
-                'status': 'success',
-                'message': 'Giriş başarılı!',
-                'user': user_info
-            }), 200
+            return jsonify({'status': 'success', 'message': 'Giriş başarılı!', 'user': user_info}), 200
         else:
-            return jsonify({
-                'status': 'fail',
-                'message': 'Geçersiz bilgiler'
-            }), 401
-
+            return jsonify({'status': 'fail', 'message': 'Geçersiz bilgiler'}), 401
     except Exception as e:
         print(f"Get user error: {str(e)}")
-        return jsonify({
-            'status': 'error',
-            'message': 'Sunucu hatası'
-        }), 500
+        return jsonify({'status': 'error', 'message': 'Sunucu hatası'}), 500
+
 
 @app.post('/api/logs/search')
 def log_search():
@@ -88,5 +67,78 @@ def log_search():
 
     print(course)
     return jsonify(course), 200
+
+
+@app.get('/api/courses')
+def get_courses():
+    try:
+        items = course_service.list_courses()
+        print(items)
+        return jsonify(items), 200
+    except Exception as e:
+        print("courses error:", e)
+        return jsonify({"error": "Sunucu hatası"}), 500
+
+
+@app.post('/api/courses/<course_id>/select')
+def select_course(course_id):
+    try:
+        success = course_service.select_course(course_id)
+        if success:
+            return jsonify({"status": "success", "message": "Ders başarıyla seçildi"}), 200
+        else:
+            return jsonify({"status": "error", "message": "Ders bulunamadı"}), 404
+    except Exception as e:
+        print(f"Select course error: {str(e)}")
+        return jsonify({"status": "error", "message": "Sunucu hatası"}), 500
+
+
+@app.post('/api/courses/<course_id>/unselect')
+def unselect_course(course_id):
+    try:
+        success = course_service.unselect_course(course_id)
+        if success:
+            return jsonify({"status": "success", "message": "Ders başarıyla kaldırıldı"}), 200
+        else:
+            return jsonify({"status": "error", "message": "Ders bulunamadı"}), 404
+    except Exception as e:
+        print(f"Unselect course error: {str(e)}")
+        return jsonify({"status": "error", "message": "Sunucu hatası"}), 500
+
+
+@app.get('/api/courses/selected')
+def get_selected_courses():
+    try:
+        items = course_service.get_selected_courses()
+        return jsonify(items), 200
+    except Exception as e:
+        print(f"Get selected courses error: {str(e)}")
+        return jsonify({"error": "Sunucu hatası"}), 500
+
+
+@app.get('/api/admin/stats')
+def get_admin_stats():
+    try:
+        stats = {
+            "totalStudents": 1250,
+            "totalCourses": 85,
+            "approvedCourses": 72,
+            "pendingCourses": 13
+        }
+        return jsonify(stats), 200
+    except Exception as e:
+        print(f"Admin stats error: {str(e)}")
+        return jsonify({"error": "Sunucu hatası"}), 500
+
+@app.get('/api/admin/students')
+def get_all_students():
+    try:
+        students = auth_service.get_all_students()
+        return jsonify(students), 200
+    except Exception as e:
+        print(f"Get students error: {str(e)}")
+        return jsonify({"error": "Sunucu hatası"}), 500
+
+
 if __name__ == '__main__':
     app.run(debug=True)
